@@ -30,12 +30,17 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
   @override
   void initState() {
     super.initState();
-    _playerStateSubscription = VoiceRecordingService.playerStateStream?.listen((state) {
+    // Ensure the service is initialized for any permissions if needed
+    VoiceRecordingService.initialize();
+    
+    _playerStateSubscription = VoiceRecordingService.playerStateStream.listen((state) {
       if (mounted) {
+        print(' Player State Changed: $state');
         setState(() {
           _playerState = state;
           if (state == PlayerState.completed || state == PlayerState.stopped) {
             _currentlyPlayingPath = null;
+            print('   - Playback stopped/completed, clearing path.');
           }
         });
       }
@@ -158,14 +163,18 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
       if (targetPath.isEmpty) return;
 
       if (_currentlyPlayingPath == targetPath) {
+        // Toggle: If playing, stop it. If stopped/paused, play it.
         if (_playerState == PlayerState.playing) {
-          await VoiceRecordingService.pauseAudio();
-        } else if (_playerState == PlayerState.paused) {
-          await VoiceRecordingService.resumeAudio();
+          await VoiceRecordingService.stopAudio();
+          setState(() {
+            _playerState = PlayerState.stopped;
+            _currentlyPlayingPath = null;
+          });
         } else {
           await VoiceRecordingService.playAudio(targetPath, isUrl: voiceUrl != null);
         }
       } else {
+        // Switch: Stop current and play new
         await VoiceRecordingService.stopAudio();
         await VoiceRecordingService.playAudio(targetPath, isUrl: voiceUrl != null);
         setState(() {
@@ -281,59 +290,60 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
                   );
                 }
 
+                final isPlaying = _currentlyPlayingPath == (msg['voiceUrl'] ?? msg['audioPath']) && _playerState == PlayerState.playing;
+
                 return Align(
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFFE0712D) : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: isUser ? null : Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: messageType == 'voice'
-                        ? GestureDetector(
-                      onTap: () {
-                        print(' Voice message tapped!');
-                        print('   - Audio path: ${msg['audioPath']}');
-                        print('   - Voice URL: ${msg['voiceUrl']}');
-                        print('   - Message data: $msg');
-                        _playVoiceMessage(msg['audioPath'], voiceUrl: msg['voiceUrl']);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: isUser ? Colors.white.withOpacity(0.2) : Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              (_currentlyPlayingPath == (msg['voiceUrl'] ?? msg['audioPath']) && _playerState == PlayerState.playing)
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                              color: isUser ? Colors.white : const Color(0xFFE0712D),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              " Voice (${msg['duration'] ?? '?'}s)",
+                  child: GestureDetector(
+                    onTap: messageType == 'voice' 
+                        ? () => _playVoiceMessage(msg['audioPath'], voiceUrl: msg['voiceUrl'])
+                        : null,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isUser ? const Color(0xFFE0712D) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: isUser ? null : Border.all(color: Colors.grey.shade300),
+                        boxShadow: isPlaying 
+                            ? [BoxShadow(color: const Color(0xFFE0712D).withOpacity(0.3), blurRadius: 8, spreadRadius: 2)] 
+                            : null,
+                      ),
+                      child: messageType == 'voice'
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isUser ? Colors.white.withOpacity(0.2) : Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isPlaying ? Icons.stop : Icons.play_arrow,
+                                    color: isUser ? Colors.white : const Color(0xFFE0712D),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    msg['duration'] != null && msg['duration'] != '?'
+                                        ? "Voice (${msg['duration']}s)"
+                                        : "Voice Message",
+                                    style: TextStyle(
+                                      color: isUser ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Text(
+                              msg['text'],
                               style: TextStyle(
                                 color: isUser ? Colors.white : Colors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                        : Text(
-                      msg['text'],
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black,
-                      ),
                     ),
                   ),
                 );

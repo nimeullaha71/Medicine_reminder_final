@@ -9,19 +9,14 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class VoiceRecordingService {
-  static AudioRecorder? _audioRecorder;
-  static AudioPlayer? _audioPlayer;
+  static final AudioRecorder _audioRecorder = AudioRecorder();
+  static final AudioPlayer _audioPlayer = AudioPlayer();
   static String? _currentRecordingPath;
   static bool _isInitialized = false;
 
   static Future<bool> initialize() async {
     try {
       if (_isInitialized) return true;
-
-
-      _audioRecorder = AudioRecorder();
-      _audioPlayer = AudioPlayer();
-
 
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
@@ -30,7 +25,7 @@ class VoiceRecordingService {
       }
 
       _isInitialized = true;
-      print(' VoiceRecordingService initialized');
+      print(' VoiceRecordingService initialized (permissions granted)');
       return true;
     } catch (e) {
       print(' Error initializing VoiceRecordingService: $e');
@@ -45,12 +40,9 @@ class VoiceRecordingService {
         if (!initialized) return null;
       }
 
-      if (_audioRecorder == null) {
-        print(' Audio recorder not initialized');
-        return null;
-      }
+      // No null check needed as _audioRecorder is final
 
-      if (await _audioRecorder!.isRecording()) {
+      if (await _audioRecorder.isRecording()) {
         print(' Already recording');
         return null;
       }
@@ -62,7 +54,7 @@ class VoiceRecordingService {
 
       print(' Starting recording to: $_currentRecordingPath');
 
-      await _audioRecorder!.start(
+      await _audioRecorder.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
@@ -73,7 +65,7 @@ class VoiceRecordingService {
 
       await Future.delayed(const Duration(milliseconds: 100));
 
-      final isRecording = await _audioRecorder!.isRecording();
+      final isRecording = await _audioRecorder.isRecording();
       if (!isRecording) {
         print(' Failed to start recording');
         _currentRecordingPath = null;
@@ -91,13 +83,11 @@ class VoiceRecordingService {
 
   static Future<String?> stopRecording() async {
     try {
-      if (_audioRecorder == null) return null;
-
-      final isRecording = await _audioRecorder!.isRecording();
+      final isRecording = await _audioRecorder.isRecording();
       if (!isRecording) return null;
 
       print(' Stopping recording...');
-      final path = await _audioRecorder!.stop();
+      final path = await _audioRecorder.stop();
       
       if (path != null) {
         final file = File(path);
@@ -121,8 +111,8 @@ class VoiceRecordingService {
 
   static Future<void> cancelRecording() async {
     try {
-      if (_audioRecorder == null) return;
-      final path = await _audioRecorder!.stop();
+      // No null check needed
+      final path = await _audioRecorder.stop();
       if (path != null) {
         final file = File(path);
         if (await file.exists()) {
@@ -139,16 +129,14 @@ class VoiceRecordingService {
 
   static Future<void> playAudio(String path, {bool isUrl = false}) async {
     try {
-      if (_audioPlayer == null) return;
-      
       print(' Attempting to play voice message: $path');
       
       if (isUrl) {
-        await _audioPlayer!.play(UrlSource(path));
+        await _audioPlayer.play(UrlSource(path));
       } else {
         final file = File(path);
         if (await file.exists()) {
-          await _audioPlayer!.play(DeviceFileSource(path));
+          await _audioPlayer.play(DeviceFileSource(path));
         } else {
           print(' Error: Audio file does not exist at $path');
         }
@@ -159,22 +147,22 @@ class VoiceRecordingService {
   }
 
   static Future<void> pauseAudio() async {
-    await _audioPlayer?.pause();
+    await _audioPlayer.pause();
   }
 
   static Future<void> resumeAudio() async {
-    await _audioPlayer?.resume();
+    await _audioPlayer.resume();
   }
 
   static Future<void> stopAudio() async {
-    await _audioPlayer?.stop();
+    await _audioPlayer.stop();
   }
 
-  static Stream<PlayerState>? get playerStateStream => _audioPlayer?.onPlayerStateChanged;
+  static Stream<PlayerState> get playerStateStream => _audioPlayer.onPlayerStateChanged;
 
   static Future<bool> isRecording() async {
     try {
-      return _audioRecorder != null && await _audioRecorder!.isRecording();
+      return await _audioRecorder.isRecording();
     } catch (e) {
       print(' Error checking recording status: $e');
       return false;
@@ -195,10 +183,8 @@ class VoiceRecordingService {
 
   static void dispose() {
     try {
-      _audioRecorder?.dispose();
-      _audioPlayer?.dispose();
-      _audioRecorder = null;
-      _audioPlayer = null;
+      _audioRecorder.dispose();
+      _audioPlayer.dispose();
       _isInitialized = false;
       print(' VoiceRecordingService disposed');
     } catch (e) {

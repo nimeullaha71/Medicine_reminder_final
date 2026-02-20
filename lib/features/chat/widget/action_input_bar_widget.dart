@@ -162,38 +162,25 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xffFFFAF7),
-        border: Border.all(color: const Color(0xFFE67E22).withOpacity(0.4)),
+        border: Border.all(
+          color: _isRecording ? Colors.red : const Color(0xFFE67E22).withOpacity(0.4),
+          width: _isRecording ? 2 : 1,
+        ),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (_isRecording) ...[
-            // Cancel Button
+          // Left Action: Camera/Gallery OR Cancel
+          if (_isRecording)
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
               onPressed: _cancelRecording,
-            ),
-            const SizedBox(width: 8),
-            FadeTransition(
-              opacity: _pulseController,
-              child: const Icon(Icons.circle, color: Colors.red, size: 12),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _formatDuration(_secondsElapsed),
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-            const Spacer(),
-            // Save Button
-            IconButton(
-              icon: const Icon(Icons.check, color: Colors.green, size: 28),
-              onPressed: _stopRecording,
-            ),
-          ] else ...[
+              tooltip: 'Cancel Recording',
+            )
+          else
             InkWell(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
@@ -201,21 +188,70 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
               },
               child: SvgPicture.asset('assets/camera.svg', height: 32, width: 32),
             ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(50),
-                onTap: _startRecording, // Changed from onLongPress
+
+          const SizedBox(width: 12),
+
+          // Center: Timer & Status OR Placeholder text
+          Expanded(
+            child: _isRecording
+                ? Row(
+                    children: [
+                      FadeTransition(
+                        opacity: _pulseController,
+                        child: const Icon(Icons.circle, color: Colors.red, size: 12),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "RECORDING... ${_formatDuration(_secondsElapsed)}",
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Right Action: Toggle Mic/Stop
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(50),
+              onTap: _isRecording ? _stopRecording : _startRecording,
+              child: AnimatedScale(
+                scale: _isRecording ? 1.1 : 1.0,
+                duration: const Duration(milliseconds: 200),
                 child: Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE67E22),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _isRecording ? Colors.red : const Color(0xFFE67E22),
                     shape: BoxShape.circle,
+                    boxShadow: _isRecording
+                        ? [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            )
+                          ]
+                        : null,
                   ),
-                  child: const Icon(Icons.mic, color: Colors.white, size: 30),
+                  child: Icon(
+                    _isRecording ? Icons.stop : Icons.mic,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
             ),
+          ),
+
+          if (!_isRecording) ...[
+            const SizedBox(width: 12),
             InkWell(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
