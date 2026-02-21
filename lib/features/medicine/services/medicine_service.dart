@@ -90,4 +90,33 @@ class MedicineService {
       return response.body.isNotEmpty ? response.body : 'No error details';
     }
   }
+
+  static Future<bool> updateMedicineStock(int id, int stock) async {
+    try {
+      final url = Urls.updateMedicineStock(id);
+      print('🚀 Updating medicine stock at: $url with amount: $stock');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _getAuthHeaders(),
+        body: jsonEncode({'stock': stock.toString()}),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      print('📊 Stock Update API Response status: ${response.statusCode}');
+      print('📊 Stock Update API Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('❌ Stock update error: $e');
+      rethrow;
+    }
+  }
 }

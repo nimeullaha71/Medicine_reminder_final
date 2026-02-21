@@ -3,6 +3,7 @@ import 'package:care_agent/features/medicine/screen/medicine_screen.dart';
 import 'package:care_agent/features/medicine/widget/custom_checkout.dart';
 import 'package:care_agent/features/medicine/widget/custom_pharmacy.dart';
 import 'package:care_agent/features/medicine/models/medicine_model.dart';
+import 'package:care_agent/features/medicine/services/medicine_service.dart';
 import 'package:care_agent/features/pharmacy/models/pharmacy_model.dart';
 import 'package:care_agent/features/pharmacy/services/pharmacy_service.dart';
 import 'package:flutter/material.dart';
@@ -358,21 +359,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               SizedBox(height: 50),
-              CustomButton(text: "Confirm", onTap: (){
-                // Create updated medicine with new stock = original stock + selected quantity
-                final updatedMedicine = MedicineModel(
-                  id: widget.medicine.id,
-                  name: widget.medicine.name,
-                  howManyDay: widget.medicine.howManyDay,
-                  stock: widget.medicine.stock + selectedQuantity, // Add selected quantity to stock
-                  prescriptionId: widget.medicine.prescriptionId,
-                  quantity: 0, // Reset quantity after confirmation
-                );
-                
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MedicineScreen()),
-                );
+              CustomButton(text: "Confirm", onTap: () async {
+                try {
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(color: Color(0xffE0712D)),
+                    ),
+                  );
+
+                  // Call the refill API
+                  // selectedQuantity is the digit user gave in Refill screen
+                  final success = await MedicineService.updateMedicineStock(
+                    widget.medicine.id,
+                    selectedQuantity,
+                  );
+
+                  // Close loading indicator
+                  if (mounted) Navigator.pop(context);
+
+                  if (success) {
+                    if (mounted) {
+                      _showSuccessSnackBar('Medicine refilled successfully');
+                      
+                      // Navigate back to MedicineScreen which will trigger loadMedicines in its initState
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MedicineScreen()),
+                        (route) => false,
+                      );
+                    }
+                  }
+                } catch (e) {
+                  // Close loading indicator if it's still showing
+                  if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+                  
+                  _showErrorSnackBar(e.toString());
+                }
               })
             ],
           ),
