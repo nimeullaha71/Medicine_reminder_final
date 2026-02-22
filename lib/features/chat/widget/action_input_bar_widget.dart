@@ -9,8 +9,14 @@ import '../services/voice_chat_service.dart';
 class ActionInputBarWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final Function(Map<String, dynamic>)? onRecordingComplete;
+  final Function(File)? onImageCaptured;
 
-  const ActionInputBarWidget({super.key, this.onTap, this.onRecordingComplete});
+  const ActionInputBarWidget({
+    super.key,
+    this.onTap,
+    this.onRecordingComplete,
+    this.onImageCaptured,
+  });
 
   @override
   State<ActionInputBarWidget> createState() => _ActionInputBarWidgetState();
@@ -184,7 +190,10 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
             InkWell(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
-                await picker.pickImage(source: ImageSource.camera);
+                final XFile? image = await picker.pickImage(source: ImageSource.camera);
+                if (image != null && widget.onImageCaptured != null) {
+                  widget.onImageCaptured!(File(image.path));
+                }
               },
               child: SvgPicture.asset('assets/camera.svg', height: 32, width: 32),
             ),
@@ -255,7 +264,10 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
             InkWell(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
-                await picker.pickImage(source: ImageSource.gallery);
+                final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                if (image != null && widget.onImageCaptured != null) {
+                  widget.onImageCaptured!(File(image.path));
+                }
               },
               child: SvgPicture.asset('assets/plus.svg', height: 32, width: 32),
             ),

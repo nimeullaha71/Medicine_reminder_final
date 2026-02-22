@@ -17,18 +17,33 @@ class ChatPrescriptionModel {
 
   factory ChatPrescriptionModel.fromJson(Map<String, dynamic> json) {
     try {
+      // Handle the case where the root object IS the prescription data
+      // or if it's wrapped in a 'data' list.
+      List<PrescriptionData> dataList = [];
+      
+      if (json.containsKey('data') && json['data'] is List) {
+        dataList = (json['data'] as List<dynamic>)
+            .map((item) => PrescriptionData.fromJson(item as Map<String, dynamic>))
+            .toList();
+      } else if (json.containsKey('medicines') || json.containsKey('patient')) {
+        // Root object appears to be the prescription data itself
+        dataList = [PrescriptionData.fromJson(json)];
+      }
+
       return ChatPrescriptionModel(
-        conversationId: json['conversation_id'] as int?,
+        conversationId: json['conversation_id'] is int ? json['conversation_id'] as int? : null,
         response: json['response'] as String?,
         messageType: json['message_type'] as String?,
         createdAt: json['created_at'] as String?,
-        data: (json['data'] as List<dynamic>?)
-            ?.map((item) => PrescriptionData.fromJson(item as Map<String, dynamic>))
-            .toList(),
+        data: dataList,
       );
     } catch (e) {
       print('Error parsing ChatPrescriptionResponse: $e');
-      rethrow;
+      // If parsing fails, try to return a model with empty data but logging the error
+      return ChatPrescriptionModel(
+        response: 'Error parsing prescription: $e',
+        data: [],
+      );
     }
   }
 

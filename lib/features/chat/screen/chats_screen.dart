@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:care_agent/features/chat/screen/chatdetails_screen.dart';
 import 'package:care_agent/features/chat/widget/custom_text.dart';
 import 'package:care_agent/features/chat/services/chat_service.dart';
 import 'package:care_agent/features/chat/services/voice_chat_service.dart';
 import 'package:care_agent/features/chat/models/chat_model.dart';
+import 'package:care_agent/features/chat/models/chat_prescription_model.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:get_storage/get_storage.dart';
@@ -92,7 +94,15 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
   }
 
   Future<int> _getCurrentUserId() async {
-    return AuthService.currentUserId;
+    if (AuthService.currentUserId != 0) {
+      return AuthService.currentUserId;
+    }
+    final box = GetStorage();
+    final savedId = box.read('user_id');
+    if (savedId != null && savedId is int) {
+      return savedId;
+    }
+    return 0;
   }
 
   Future<String> _getCurrentAuthToken() async {
@@ -151,6 +161,63 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
           'sender': 'bot',
           'type': 'error',
           'text': 'Failed to send voice message. Please try again.',
+        });
+      });
+    }
+    _scrollToBottom();
+  }
+
+  Future<void> _sendImageMessage(File imageFile) async {
+    final int messageIndex = _messages.length;
+    setState(() {
+      _messages.add({
+        'sender': 'user',
+        'type': 'image',
+        'imagePath': imageFile.path,
+        'isLoading': true,
+      });
+      _showPlaceholderImage = false;
+    });
+    _scrollToBottom();
+
+    try {
+      final currentUserId = await _getCurrentUserId();
+      final response = await ChatService.sendPrescriptionImage(
+        imageFile: imageFile,
+        userId: currentUserId,
+      );
+
+      setState(() {
+        _messages[messageIndex]['isLoading'] = false;
+      });
+
+      // Parse the response and navigate to ChatdetailsScreen
+      final prescriptionModel = ChatPrescriptionModel.fromJson(response);
+      
+      if (mounted && prescriptionModel.data.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatdetailsScreen(prescriptionData: prescriptionModel),
+          ),
+        );
+      } else {
+        // Fallback for empty data or unexpected format
+        setState(() {
+          _messages.add({
+            'sender': 'bot',
+            'text': prescriptionModel.response ?? response['response'] ?? 'Analysis complete, but no prescription data was found.',
+            'type': 'text',
+          });
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _messages[messageIndex]['isLoading'] = false;
+        _messages.add({
+          'sender': 'bot',
+          'type': 'error',
+          'text': 'Failed to analyze prescription. Please try again.',
         });
       });
     }
@@ -338,12 +405,48 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
                                 ],
                               ),
                             )
-                          : Text(
-                              msg['text'],
-                              style: TextStyle(
-                                color: isUser ? Colors.white : Colors.black,
-                              ),
-                            ),
+                          : messageType == 'image'
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        File(msg['imagePath']),
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    if (msg['isLoading'] == true) ...[
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            "Analyzing...",
+                                            style: TextStyle(color: Colors.white, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                )
+                              : Text(
+                                  msg['text'] ?? '',
+                                  style: TextStyle(
+                                    color: isUser ? Colors.white : Colors.black,
+                                  ),
+                                ),
                     ),
                   ),
                 );
@@ -361,6 +464,9 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
                 },
                 onVoiceRecorded: (voiceData) {
                   _sendVoiceMessage(voiceData);
+                },
+                onImageCaptured: (imageFile) {
+                  _sendImageMessage(imageFile);
                 },
               ),
             ),

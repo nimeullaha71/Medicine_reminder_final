@@ -6,6 +6,7 @@ import 'package:care_agent/features/doctor/services/doctor_api_service.dart';
 import 'package:flutter/material.dart';
 import '../../../app/urls.dart';
 import '../../../common/app_shell.dart';
+import '../../auth/services/auth_service.dart';
 import '../../profile/widget/custom_bull.dart';
 import '../../profile/widget/custom_details.dart';
 import '../../profile/widget/custom_details1.dart';
@@ -16,7 +17,8 @@ import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 
 class ChatdetailsScreen extends StatefulWidget {
-  const ChatdetailsScreen({super.key});
+  final ChatPrescriptionModel? prescriptionData;
+  const ChatdetailsScreen({super.key, this.prescriptionData});
 
   @override
   State<ChatdetailsScreen> createState() => _ChatdetailsScreenState();
@@ -42,8 +44,20 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
   @override
   void initState() {
     super.initState();
-    currentUserId = currentUserId;
-    _fetchPrescriptionData();
+    currentUserId = AuthService.currentUserId; // Use current user ID from AuthService
+    
+    if (widget.prescriptionData != null) {
+      prescriptionData = widget.prescriptionData;
+      isLoading = false;
+      
+      // Initialize selectedMeals for the passed data
+      final mealCount = prescriptionData!.data.isNotEmpty 
+          ? prescriptionData!.data.first.medicines.length * 4
+          : 0;
+      selectedMeals = List.filled(mealCount, 'After Meal');
+    } else {
+      _fetchPrescriptionData();
+    }
     _fetchDoctors();
   }
 

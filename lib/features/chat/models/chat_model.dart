@@ -32,26 +32,30 @@ class ChatModel {
       
 
       final conversationId = json['conversation_id']?.toString();
-      final response = json['response']?.toString() ?? '';
+      String response = json['response']?.toString() ?? 
+                       json['message']?.toString() ?? 
+                       json['text']?.toString() ?? '';
       final messageType = json['message_type']?.toString() ?? 'text';
       final voiceUrl = json['voice_url']?.toString();
       final createdAt = json['created_at']?.toString();
       
-      print(' conversation_id: $conversationId (${json['conversation_id'].runtimeType})');
-      print(' response: $response (${json['response'].runtimeType})');
-      print(' message_type: $messageType (${json['message_type'].runtimeType})');
-      print(' voice_url: $voiceUrl (${json['voice_url'].runtimeType})');
-      print(' created_at: $createdAt (${json['created_at'].runtimeType})');
+      // If still empty but we have data, maybe it's a specialty response
+      if (response.isEmpty && (json.containsKey('data') || json.containsKey('medicines'))) {
+        response = "Prescription analysis complete.";
+      }
       
-      // Validate required fields
+      print(' conversation_id: $conversationId');
+      print(' response: $response');
+      
+      // Validate
       if (response.isEmpty) {
         print(' Empty response field in JSON');
-        return ChatModel(
-          conversationId: conversationId,
-          response: 'Error: Empty response field',
-          messageType: 'error',
-          createdAt: createdAt,
-        );
+        // If it's really empty, we'll try to use the raw JSON keys as a hint
+        if (json.keys.isNotEmpty) {
+           response = "Received response with keys: ${json.keys.join(', ')}";
+        } else {
+           response = 'Error: Empty response from server';
+        }
       }
       
       return ChatModel(

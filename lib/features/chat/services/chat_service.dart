@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../app/urls.dart';
@@ -25,20 +26,19 @@ class ChatService {
 
   static Future<ChatModel> sendMessage(String text, int userId, {String? token}) async {
     try {
+      final url = Urls.Chat_Bot;
+      print(' Sending text chat message (JSON) to: $url');
+      print(' User ID: $userId, Text: $text');
+
       final Map<String, dynamic> requestBody = {
         "text": text,
         "user_id": userId,
         "reply_mode": "text"
       };
 
-      final url = Urls.Chat_Bot;
-      
-      print(' Sending chat message to: $url');
-      print(' Request body: ${jsonEncode(requestBody)}');
-
       final response = await http.post(
         Uri.parse(url),
-        headers: _getAuthHeaders(),
+        headers: _getAuthHeaders(), // This already includes Application/JSON
         body: jsonEncode(requestBody),
       ).timeout(
         Duration(seconds: 30),
@@ -46,7 +46,7 @@ class ChatService {
       );
 
       print(' Chat API Response status: ${response.statusCode}');
-      print(' Response body: ${response.body}');
+      print(' Chat API Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -74,25 +74,83 @@ class ChatService {
     } on http.ClientException catch (e) {
       print(' Network error: $e');
       throw Exception('Network connection failed: ${e.message}');
-    } on FormatException catch (e) {
-      print(' Format error: $e');
-      throw Exception('Invalid response format: ${e.message}');
     } catch (e) {
       print(' Unexpected error: $e');
       throw Exception('Unexpected error occurred: $e');
     }
   }
 
+  static Future<Map<String, dynamic>> sendPrescriptionImage({
+    required File imageFile,
+    required int userId,
+  }) async {
+    try {
+      final url = Urls.Chat_Bot;
+      print(' Sending prescription image to: $url');
+      print(' User ID: $userId, File path: ${imageFile.path}');
+
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+      
+      // Add authentication headers
+      final headers = _getAuthHeaders();
+      headers.remove('Content-Type'); // Multipart handles its own content type
+      request.headers.addAll(headers);
+
+      // Add fields matching Postman
+      request.fields['user_id'] = userId.toString();
+      request.fields['reply_mode'] = 'text';
+
+      // Add file matching Postman field name 'file'
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+        ),
+      );
+
+      print(' Request fields: ${request.fields}');
+      print(' Request files: ${request.files.map((f) => f.field).toList()}');
+
+      final streamedResponse = await request.send().timeout(
+        Duration(seconds: 60),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print(' Prescription AI API Response status: ${response.statusCode}');
+      print(' Prescription AI API Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final Map<String, dynamic> responseData = json.decode(response.body);
+          return responseData;
+        } catch (e) {
+          print(' JSON parsing error: $e');
+          throw Exception('Failed to parse prescription response: $e');
+        }
+      } else {
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception('Failed to analyze prescription: ${response.statusCode} - $errorMessage');
+      }
+    } catch (e) {
+      print(' Unexpected error in sendPrescriptionImage: $e');
+      throw Exception('Unexpected error occurred: $e');
+    }
+  }
+
   static String _extractErrorMessage(http.Response response) {
     try {
+      if (response.body.isEmpty) return 'No response body from server';
       final Map<String, dynamic> errorData = json.decode(response.body);
       return errorData['message'] ?? 
              errorData['error'] ?? 
              errorData['detail'] ?? 
              errorData['response'] ??
-             'Unknown error';
-    } catch (_) {
-      return response.body.isNotEmpty ? response.body : 'No error details';
+             'Unknown error (${response.statusCode})';
+    } catch (e) {
+      print(' Error extracting error message: $e');
+      return response.body.isNotEmpty ? response.body : 'Status ${response.statusCode}';
     }
   }
 }

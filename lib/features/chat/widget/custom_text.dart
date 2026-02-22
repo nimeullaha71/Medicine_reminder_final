@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:care_agent/features/chat/widget/action_input_bar_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -5,12 +7,14 @@ class CustomText extends StatefulWidget {
   final TextEditingController messageController;
   final Function(String) onSend;
   final Function(Map<String, dynamic>)? onVoiceRecorded;
+  final Function(File)? onImageCaptured;
 
   const CustomText({
     super.key,
     required this.messageController,
     required this.onSend,
     this.onVoiceRecorded,
+    this.onImageCaptured,
   });
 
   @override
@@ -102,6 +106,7 @@ class _CustomTextState extends State<CustomText> {
                 _stagedRecording = voiceData;
               });
             },
+            onImageCaptured: widget.onImageCaptured,
           ),
         ],
       ),
