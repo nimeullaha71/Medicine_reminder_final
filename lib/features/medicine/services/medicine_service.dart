@@ -119,4 +119,34 @@ class MedicineService {
       rethrow;
     }
   }
+
+  static Future<Map<String, dynamic>> createPrescription(Map<String, dynamic> prescriptionData) async {
+    try {
+      final url = Urls.Get_all_prescriptions;
+      print('🚀 Creating prescription at: $url');
+      print('📦 Payload: ${jsonEncode(prescriptionData)}');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _getAuthHeaders(),
+        body: jsonEncode(prescriptionData),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      print('📊 Prescription API Response status: ${response.statusCode}');
+      print('📊 Prescription API Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('❌ Prescription creation error: $e');
+      rethrow;
+    }
+  }
 }

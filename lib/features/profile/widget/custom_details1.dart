@@ -4,12 +4,16 @@ class CustomDetails1 extends StatefulWidget {
   final String name;
   final String subtitle;
   final Function(String)? onChanged;
+  final TextInputType? keyboardType;
+  final String? errorMessage;
 
   const CustomDetails1({
     super.key,
     required this.name,
     required this.subtitle ,
     this.onChanged,
+    this.keyboardType,
+    this.errorMessage,
   });
 
   @override
@@ -33,7 +37,36 @@ class _CustomDetails1State extends State<CustomDetails1> {
   }
 
   @override
+  void didUpdateWidget(CustomDetails1 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.subtitle != oldWidget.subtitle && !_isEditing) {
+      _subtitleController.text = widget.subtitle;
+    }
+  }
+
+  Widget _buildError() {
+    if (widget.errorMessage == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 4),
+      child: Text(
+        widget.errorMessage!,
+        style: const TextStyle(color: Colors.red, fontSize: 12),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildContent(),
+        _buildError(),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -72,35 +105,43 @@ class _CustomDetails1State extends State<CustomDetails1> {
               child: _isEditing
                   ? TextField(
                 controller: _subtitleController,
-                keyboardType: TextInputType.number,
+                keyboardType: widget.keyboardType ?? TextInputType.text,
                 textAlignVertical: TextAlignVertical.center,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
+                  hintText: widget.subtitle,
+                  hintStyle: const TextStyle(color: Colors.grey),
                 ),
                 autofocus: true,
+                onChanged: (value) {
+                  if (widget.onChanged != null) {
+                    widget.onChanged!(value.isEmpty ? widget.subtitle : value);
+                  }
+                },
                 onSubmitted: (value) {
                   setState(() {
                     _isEditing = false;
+                    if (value.isEmpty) {
+                      _subtitleController.text = widget.subtitle;
+                    }
                   });
-                  if (widget.onChanged != null) {
-                    widget.onChanged!(value);
-                  }
                 },
               )
                   : GestureDetector(
                 onTap: () {
                   setState(() {
+                    _subtitleController.clear();
                     _isEditing = true;
                   });
                 },
                 child: Text(
-                  _subtitleController.text,
+                  _subtitleController.text.isEmpty ? widget.subtitle : _subtitleController.text,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,

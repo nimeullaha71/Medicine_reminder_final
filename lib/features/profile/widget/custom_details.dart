@@ -4,12 +4,14 @@ class CustomDetails extends StatefulWidget {
   final String name;
   final String medicine;
   final Function(String)? onChanged;
+  final String? errorMessage;
 
   const CustomDetails({
     super.key,
     required this.name,
     required this.medicine,
     this.onChanged,
+    this.errorMessage,
   });
 
   @override
@@ -33,7 +35,36 @@ class _CustomDetailsState extends State<CustomDetails> {
   }
 
   @override
+  void didUpdateWidget(CustomDetails oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.medicine != oldWidget.medicine && !_isEditing) {
+      _medicineController.text = widget.medicine;
+    }
+  }
+
+  Widget _buildError() {
+    if (widget.errorMessage == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 4),
+      child: Text(
+        widget.errorMessage!,
+        style: const TextStyle(color: Colors.red, fontSize: 12),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildContent(),
+        _buildError(),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -76,30 +107,37 @@ class _CustomDetailsState extends State<CustomDetails> {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
+                  hintText: widget.medicine,
+                  hintStyle: const TextStyle(color: Colors.grey),
                 ),
                 autofocus: true,
+                onChanged: (value) {
+                  if (widget.onChanged != null) {
+                    widget.onChanged!(value.isEmpty ? widget.medicine : value);
+                  }
+                },
                 onSubmitted: (value) {
                   setState(() {
                     _isEditing = false;
+                    if (value.isEmpty) {
+                      _medicineController.text = widget.medicine;
+                    }
                   });
-                  // You can add a callback here to notify parent of the change
-                  if (widget.onChanged != null) {
-                    widget.onChanged!(value);
-                  }
                 },
               )
                   : GestureDetector(
                 onTap: () {
                   setState(() {
+                    _medicineController.clear();
                     _isEditing = true;
                   });
                 },
                 child: Text(
-                  _medicineController.text,
+                  _medicineController.text.isEmpty ? widget.medicine : _medicineController.text,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,

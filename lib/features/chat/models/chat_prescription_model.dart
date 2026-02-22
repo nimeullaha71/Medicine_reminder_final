@@ -142,6 +142,28 @@ class PrescriptionData {
     };
   }
 
+  PrescriptionData copyWith({
+    int? id,
+    int? users,
+    int? doctor,
+    ImageModel? prescriptionImage,
+    String? nextAppointmentDate,
+    Patient? patient,
+    List<Medicine>? medicines,
+    List<dynamic>? medicalTests,
+  }) {
+    return PrescriptionData(
+      id: id ?? this.id,
+      users: users ?? this.users,
+      doctor: doctor ?? this.doctor,
+      prescriptionImage: prescriptionImage ?? this.prescriptionImage,
+      nextAppointmentDate: nextAppointmentDate ?? this.nextAppointmentDate,
+      patient: patient ?? this.patient,
+      medicines: medicines ?? this.medicines,
+      medicalTests: medicalTests ?? this.medicalTests,
+    );
+  }
+
   @override
   String toString() {
     return 'PrescriptionData(id: $id, users: $users, doctor: $doctor, patient: ${patient?.name}, medicines: ${medicines.length} items)';
@@ -206,6 +228,20 @@ class Patient {
       'sex': sex,
       'health_issues': healthIssues,
     };
+  }
+
+  Patient copyWith({
+    String? name,
+    int? age,
+    String? sex,
+    String? healthIssues,
+  }) {
+    return Patient(
+      name: name ?? this.name,
+      age: age ?? this.age,
+      sex: sex ?? this.sex,
+      healthIssues: healthIssues ?? this.healthIssues,
+    );
   }
 
   @override
@@ -292,6 +328,28 @@ class Medicine {
     };
   }
 
+  Medicine copyWith({
+    int? id,
+    String? name,
+    int? howManyDay,
+    int? stock,
+    MedicineTime? morning,
+    MedicineTime? afternoon,
+    MedicineTime? evening,
+    MedicineTime? night,
+  }) {
+    return Medicine(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      howManyDay: howManyDay ?? this.howManyDay,
+      stock: stock ?? this.stock,
+      morning: morning ?? this.morning,
+      afternoon: afternoon ?? this.afternoon,
+      evening: evening ?? this.evening,
+      night: night ?? this.night,
+    );
+  }
+
   @override
   String toString() {
     return 'Medicine(name: $name, days: $howManyDay)';
@@ -354,6 +412,18 @@ class MedicineTime {
       'before_meal': beforeMeal,
       'after_meal': afterMeal,
     };
+  }
+
+  MedicineTime copyWith({
+    String? time,
+    bool? beforeMeal,
+    bool? afterMeal,
+  }) {
+    return MedicineTime(
+      time: time ?? this.time,
+      beforeMeal: beforeMeal ?? this.beforeMeal,
+      afterMeal: afterMeal ?? this.afterMeal,
+    );
   }
 
   @override

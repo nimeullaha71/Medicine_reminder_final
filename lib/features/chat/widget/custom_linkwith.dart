@@ -27,57 +27,62 @@ class CustomLinkwith extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
+        child: Stack(
           children: [
-            Container(
-              width: 80,
-              height: 65,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.person,
-                color: Colors.grey[400],
-                size: 70,
-              ),
-            ),
-
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doctorName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+            Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 65,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    specialization,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black,
-                    ),
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.grey[400],
+                    size: 70,
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Hospital: $hospital',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.black,
-                    ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        doctorName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        specialization,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Hospital: $hospital',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 40), // Space for the floating button
+              ],
             ),
             Positioned(
-              bottom: 8,
-              right: 8,
+              bottom: 0,
+              right: 0,
               child: InkWell(
+                onTap: onTap, // Ensure onTap is passed here
                 child: Container(
                   height: 35,
                   width: 35,
@@ -85,12 +90,14 @@ class CustomLinkwith extends StatelessWidget {
                     color: Color(0xffE0712D),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: const Text("Add", style: TextStyle(
+                  child: const Center(
+                    child: Text(
+                      "Add",
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,
-                        fontWeight: FontWeight.bold
-                    )
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
