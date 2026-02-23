@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import '../../../../common/app_shell.dart';
-import '../../../chat/widget/custom_minibutton.dart';
 import '../../../chat/widget/custom_notification.dart';
+import '../../services/notification_service.dart';
+import '../../models/notification_model.dart';
+import 'package:intl/intl.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -12,6 +13,148 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
+  bool isLoading = true;
+  List<NotificationModel> notifications = [];
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotifications();
+  }
+
+  Future<void> _fetchNotifications() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    try {
+      final response = await NotificationService.getNotifications();
+      setState(() {
+        notifications = response.notifications;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _markAsRead(int index) async {
+    final notification = notifications[index];
+    if (notification.isRead) return;
+
+    // Optimistically update local state
+    setState(() {
+      notifications[index] = NotificationModel(
+        id: notification.id,
+        notificationType: notification.notificationType,
+        title: notification.title,
+        body: notification.body,
+        isSent: notification.isSent,
+        isRead: true,
+        sentAt: notification.sentAt,
+        medicine: notification.medicine,
+      );
+    });
+
+    try {
+      final success = await NotificationService.markAsRead(notification.id);
+      if (!success) {
+        // Rollback on failure (optional, but good practice)
+        // For simplicity here, we'll just keep the optimistic update unless it's critical
+      }
+    } catch (e) {
+      print('Error marking notification as read: $e');
+    }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('dd/MM/yy').format(dateTime);
+    }
+  }
+
+  Future<void> _deleteNotification(int index) async {
+    final notification = notifications[index];
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Notification'),
+        content: const Text('Are you sure you want to delete this notification?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        isLoading = true; // Show loading while deleting or just remove instantly
+      });
+
+      try {
+        final success = await NotificationService.deleteNotification(notification.id);
+        if (success) {
+          setState(() {
+            notifications.removeAt(index);
+            isLoading = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notification deleted')),
+            );
+          }
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to delete notification')),
+            );
+          }
+        }
+      } catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        print('Error deleting notification: $e');
+      }
+    }
+  }
+
+  String _getIconPath(String type) {
+    switch (type) {
+      case 'medicine_reminder':
+        return 'assets/time.svg';
+      case 'medical_test_alert':
+        return 'assets/light.svg';
+      case 'refill_alert':
+        return 'assets/not.svg';
+      default:
+        return 'assets/cap.svg';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return SubPageScaffold(
@@ -40,254 +183,34 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ),
       ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                CustomNotification(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(
-                            color: Color(0xFFFFF0E6),
-                            width: 3,
-                          ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xffE0712D)))
+            : error != null
+                ? Center(child: Text(error!))
+                : notifications.isEmpty
+                    ? const Center(child: Text("No notifications yet"))
+                    : RefreshIndicator(
+                        onRefresh: _fetchNotifications,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 20),
+                          itemCount: notifications.length,
+                          itemBuilder: (context, index) {
+                            final notification = notifications[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: CustomNotification(
+                                title: notification.title,
+                                message: notification.body,
+                                time: _formatTime(notification.sentAt),
+                                iconPath: _getIconPath(notification.notificationType),
+                                isRead: notification.isRead,
+                                onTap: () => _markAsRead(index),
+                                onLongPress: () => _deleteNotification(index),
+                              ),
+                            );
+                          },
                         ),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: SvgPicture.asset(
-                                'assets/light.svg',
-                                height: 100,
-                                width: 100,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Center(
-                              child: Text(
-                                "Did you get your \nCBC test Done?",
-                                style: TextStyle(
-                                  color: Color(0xffE0712D),
-                                  fontSize: 25,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              CustomMinibutton(
-                                text: 'Yes',
-                                textcolor: Colors.white,
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xFFE0712D),
-                              ),
-                              const SizedBox(width: 7),
-                              CustomMinibutton(
-                                text: 'No',
-                                textcolor: const Color(0xffE0712D),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xffFFFAF7),
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
-                    );
-                  },
-                  title: 'Medical test alert!',
-                  message: 'You need to check your sugar level! ',
-                  time: '4:46 PM',
-                  iconPath: 'assets/light.svg',
-                ),
-                const SizedBox(height: 15),
-                const Divider(
-                  color: Color(0xffFFF0E6),
-                  thickness: 2,
-                  height: 1,
-                ),
-                const SizedBox(height: 20),
-                CustomNotification(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(
-                            color: Color(0xFFFFF0E6),
-                            width: 3,
-                          ),
-                        ),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: SvgPicture.asset(
-                                'assets/not.svg',
-                                height: 100,
-                                width: 100,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Center(
-                              child: Text(
-                                "You need to refill \nBisocor Tablet 2.5mg",
-                                style: TextStyle(
-                                  color: Color(0xffE0712D),
-                                  fontSize: 25,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              CustomMinibutton(
-                                text: 'Refill',
-                                textcolor: Colors.white,
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xFFE0712D),
-                              ),
-                              const SizedBox(width: 7),
-                              CustomMinibutton(
-                                text: 'Decline',
-                                textcolor: const Color(0xffE0712D),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xffFFFAF7),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  title: 'Medical test alert!',
-                  message: 'You need to check your sugar level! ',
-                  time: '4:46 PM',
-                  iconPath: 'assets/not.svg',
-                ),
-                const SizedBox(height: 15),
-                const Divider(
-                  color: Color(0xffFFF0E6),
-                  thickness: 2,
-                  height: 1,
-                ),
-                const SizedBox(height: 20),
-                CustomNotification(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(
-                            color: Color(0xFFFFF0E6),
-                            width: 3,
-                          ),
-                        ),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: SvgPicture.asset(
-                                'assets/time.svg',
-                                height: 100,
-                                width: 100,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Center(
-                              child: Text(
-                                "It's time to take Bisocor \nTablet 2.5mg [1 tablet]. \nDid you take it?",
-                                style: TextStyle(
-                                  color: Color(0xffE0712D),
-                                  fontSize: 25,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              CustomMinibutton(
-                                text: 'Yes',
-                                textcolor: Colors.white,
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xFFE0712D),
-                              ),
-                              const SizedBox(width: 7),
-                              CustomMinibutton(
-                                text: 'No',
-                                textcolor: const Color(0xffE0712D),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                backgroundColor: const Color(0xffFFFAF7),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  title: 'Medical test alert!',
-                  message: 'You need to check your sugar level! ',
-                  time: '09/05/25',
-                  iconPath: 'assets/time.svg',
-                ),
-                const SizedBox(height: 15),
-                const Divider(
-                  color: Color(0xffFFF0E6),
-                  thickness: 2,
-                  height: 1,
-                ),
-                const SizedBox(height: 20),
-                const CustomNotification(
-                  title: 'Medical test alert!',
-                  message: 'You need to check your sugar level! ',
-                  time: 'yesterday',
-                  iconPath: 'assets/cap.svg',
-                ),
-                const SizedBox(height: 15),
-                const Divider(
-                  color: Color(0xffFFF0E6),
-                  thickness: 2,
-                  height: 1,
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ),
     );
   }
 }

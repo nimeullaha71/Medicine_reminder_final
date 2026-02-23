@@ -8,7 +8,8 @@ import '../widgets/appointment_cart_widget.dart';
 import '../widgets/medicine_card_widget.dart';
 import '../widgets/time_header_widget.dart';
 import 'notification_screen.dart';
-import '../../../profile/models/prescription_model.dart';
+import '../../services/notification_service.dart';
+import '../../models/notification_model.dart';
 
 class HomeScreenContent extends StatefulWidget {
   const HomeScreenContent({super.key});
@@ -22,6 +23,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   DashboardModel? dashboardData;
   bool isLoading = true;
   String? error;
+  int unreadCount = 0;
 
   @override
   void initState() {
@@ -35,9 +37,18 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
       error = null;
     });
     try {
-      final data = await DashboardService.getDashboardData(date: selectedDate);
+      // Fetch dashboard and notifications concurrently, but handle them separately
+      final results = await Future.wait([
+        DashboardService.getDashboardData(date: selectedDate),
+        NotificationService.getNotifications().catchError((e) {
+          print('Notification fetch failed: $e');
+          return NotificationResponse(unreadCount: 0, readCount: 0, notifications: []);
+        }),
+      ]);
+
       setState(() {
-        dashboardData = data;
+        dashboardData = results[0] as DashboardModel;
+        unreadCount = (results[1] as NotificationResponse).unreadCount;
         isLoading = false;
       });
     } catch (e) {
@@ -74,18 +85,47 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
           height: 39,
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NotificationScreen()),
-              );
-            },
-            icon: SvgPicture.asset(
-              'assets/notification.svg',
-              height: 24,
-              width: 24,
-            ),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                  ).then((_) => _fetchDashboardData()); // Refresh count on return
+                },
+                icon: SvgPicture.asset(
+                  'assets/notification.svg',
+                  height: 24,
+                  width: 24,
+                ),
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: 10),
         ],
