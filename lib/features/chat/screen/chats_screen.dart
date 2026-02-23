@@ -128,6 +128,54 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
     }
   }
 
+  Future<void> _clearChatHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Chat History'),
+        content: const Text('Are you sure you want to clear all chat conversations? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _isLoadingHistory = true;
+      });
+
+      try {
+        await ChatService.clearChatHistory();
+        if (mounted) {
+          setState(() {
+            _messages.clear();
+            _showPlaceholderImage = true;
+            _isLoadingHistory = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Chat history cleared successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoadingHistory = false;
+          });
+          _showErrorSnackBar('Failed to clear history: $e');
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
     _playerStateSubscription?.cancel();
@@ -379,14 +427,40 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert, color: Color(0xffE0712D)),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChatdetailsScreen()),
-              );
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Color(0xffE0712D)),
+            onSelected: (value) {
+              if (value == 'clear') {
+                _clearChatHistory();
+              } else if (value == 'details') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatdetailsScreen()),
+                );
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'details',
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20),
+                    SizedBox(width: 8),
+                    Text('Details'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    SizedBox(width: 8),
+                    Text('Clear History', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

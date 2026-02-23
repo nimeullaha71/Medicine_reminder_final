@@ -175,6 +175,34 @@ class ChatService {
     }
   }
 
+  static Future<bool> clearChatHistory() async {
+    try {
+      final url = Urls.Clear_Chat_History;
+      print('🚀 Clearing chat history at: $url');
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: _getAuthHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      print('📊 Clear History API Response status: ${response.statusCode}');
+      print('📊 Clear History API Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('❌ Error clearing history: $e');
+      rethrow;
+    }
+  }
+
   static String _extractErrorMessage(http.Response response) {
     try {
       if (response.body.isEmpty) return 'No response body from server';
