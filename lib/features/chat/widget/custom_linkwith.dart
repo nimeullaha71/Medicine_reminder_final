@@ -7,6 +7,7 @@ class CustomLinkwith extends StatelessWidget {
   final String hospital;
   final String? imageUrl;
   final VoidCallback? onTap;
+  final bool showAddButton;
 
   const CustomLinkwith({
     super.key,
@@ -15,6 +16,7 @@ class CustomLinkwith extends StatelessWidget {
     required this.hospital,
     this.imageUrl,
     this.onTap,
+    this.showAddButton = true,
   });
 
   @override
@@ -78,31 +80,32 @@ class CustomLinkwith extends StatelessWidget {
                 const SizedBox(width: 40), // Space for the floating button
               ],
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: InkWell(
-                onTap: onTap, // Ensure onTap is passed here
-                child: Container(
-                  height: 35,
-                  width: 35,
-                  decoration: const BoxDecoration(
-                    color: Color(0xffE0712D),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Add",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+            if (showAddButton)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: InkWell(
+                  onTap: onTap, // Ensure onTap is passed here
+                  child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: const BoxDecoration(
+                      color: Color(0xffE0712D),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        "Add",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

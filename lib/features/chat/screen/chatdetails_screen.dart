@@ -261,6 +261,48 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
     return (medicineIndex * 4) + timeSlot;
   }
 
+  Future<void> _selectTime(BuildContext context, int medicineIndex, String slot) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xffE0712D),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      if (!mounted) return;
+      final formattedTime = picked.format(context);
+      
+      setState(() {
+        final firstData = prescriptionData!.data.first;
+        final medicines = List<Medicine>.from(firstData.medicines);
+        final med = medicines[medicineIndex];
+        
+        if (slot == 'morning') {
+          medicines[medicineIndex] = med.copyWith(morning: med.morning?.copyWith(time: formattedTime));
+        } else if (slot == 'afternoon') {
+          medicines[medicineIndex] = med.copyWith(afternoon: med.afternoon?.copyWith(time: formattedTime));
+        } else if (slot == 'evening') {
+          medicines[medicineIndex] = med.copyWith(evening: med.evening?.copyWith(time: formattedTime));
+        } else if (slot == 'night') {
+          medicines[medicineIndex] = med.copyWith(night: med.night?.copyWith(time: formattedTime));
+        }
+        
+        prescriptionData!.data.first = firstData.copyWith(medicines: medicines);
+      });
+    }
+  }
+
   String _formatToHHmmss(String? timeStr) {
     if (timeStr == null || timeStr.isEmpty || timeStr == 'HH:MM AM/PM') return "00:00:00";
     
@@ -498,6 +540,7 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
                                       doctorName: doc.name,
                                       specialization: doc.specialization,
                                       hospital: doc.hospitalName,
+                                      showAddButton: false,
                                     );
                                   })(),
                                 ],
@@ -547,18 +590,9 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
           CustomDetails1(
             name: "Morning", 
             subtitle: medicine.morning?.time ?? 'HH:MM AM/PM', 
-            keyboardType: TextInputType.text,
+            readOnly: true,
+            onTap: () => _selectTime(context, medicineIndex, 'morning'),
             errorMessage: fieldErrors['med_morning_$medicineIndex'],
-            onChanged: (val) {
-              setState(() {
-                final firstData = prescriptionData!.data.first;
-                final medicines = List<Medicine>.from(firstData.medicines);
-                medicines[medicineIndex] = medicines[medicineIndex].copyWith(
-                  morning: medicines[medicineIndex].morning?.copyWith(time: val),
-                );
-                prescriptionData!.data.first = firstData.copyWith(medicines: medicines);
-              });
-            }
           ),
           CustomDetails1(
             name: "Days", 
@@ -617,18 +651,9 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
           CustomDetails1(
             name: "Afternoon", 
             subtitle: medicine.afternoon?.time ?? 'HH:MM AM/PM', 
-            keyboardType: TextInputType.text,
+            readOnly: true,
+            onTap: () => _selectTime(context, medicineIndex, 'afternoon'),
             errorMessage: fieldErrors['med_afternoon_$medicineIndex'],
-            onChanged: (val) {
-              setState(() {
-                final firstData = prescriptionData!.data.first;
-                final medicines = List<Medicine>.from(firstData.medicines);
-                medicines[medicineIndex] = medicines[medicineIndex].copyWith(
-                  afternoon: medicines[medicineIndex].afternoon?.copyWith(time: val),
-                );
-                prescriptionData!.data.first = firstData.copyWith(medicines: medicines);
-              });
-            }
           ),
           CustomDetails1(
             name: "Days", 
@@ -687,18 +712,9 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
           CustomDetails1(
             name: "Evening", 
             subtitle: medicine.evening?.time ?? 'HH:MM AM/PM', 
-            keyboardType: TextInputType.text,
+            readOnly: true,
+            onTap: () => _selectTime(context, medicineIndex, 'evening'),
             errorMessage: fieldErrors['med_evening_$medicineIndex'],
-            onChanged: (val) {
-              setState(() {
-                final firstData = prescriptionData!.data.first;
-                final medicines = List<Medicine>.from(firstData.medicines);
-                medicines[medicineIndex] = medicines[medicineIndex].copyWith(
-                  evening: medicines[medicineIndex].evening?.copyWith(time: val),
-                );
-                prescriptionData!.data.first = firstData.copyWith(medicines: medicines);
-              });
-            }
           ),
           CustomDetails1(
             name: "Days", 
@@ -757,18 +773,9 @@ class _ChatdetailsScreenState extends State<ChatdetailsScreen> {
           CustomDetails1(
             name: "Night", 
             subtitle: medicine.night?.time ?? 'HH:MM AM/PM', 
-            keyboardType: TextInputType.text,
+            readOnly: true,
+            onTap: () => _selectTime(context, medicineIndex, 'night'),
             errorMessage: fieldErrors['med_night_$medicineIndex'],
-            onChanged: (val) {
-              setState(() {
-                final firstData = prescriptionData!.data.first;
-                final medicines = List<Medicine>.from(firstData.medicines);
-                medicines[medicineIndex] = medicines[medicineIndex].copyWith(
-                  night: medicines[medicineIndex].night?.copyWith(time: val),
-                );
-                prescriptionData!.data.first = firstData.copyWith(medicines: medicines);
-              });
-            }
           ),
           CustomDetails1(
             name: "Days", 

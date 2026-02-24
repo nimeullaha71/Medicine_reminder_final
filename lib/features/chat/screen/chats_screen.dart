@@ -337,12 +337,16 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
         });
       }
     } catch (e) {
+      final errorMessage = e.toString().contains('Exception:') 
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Failed to analyze prescription: ${e.toString()}';
+          
       setState(() {
         _messages[messageIndex]['isLoading'] = false;
         _messages.add({
           'sender': 'bot',
           'type': 'error',
-          'text': 'Failed to analyze prescription. Please try again.',
+          'text': errorMessage,
         });
       });
     }

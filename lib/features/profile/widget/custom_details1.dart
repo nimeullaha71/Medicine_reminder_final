@@ -7,6 +7,8 @@ class CustomDetails1 extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? errorMessage;
   final bool isEditable;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   const CustomDetails1({
     super.key,
@@ -16,6 +18,8 @@ class CustomDetails1 extends StatefulWidget {
     this.keyboardType,
     this.errorMessage,
     this.isEditable = true,
+    this.readOnly = false,
+    this.onTap,
   });
 
   @override
@@ -106,6 +110,8 @@ class _CustomDetails1State extends State<CustomDetails1> {
               ),
               child: widget.isEditable
                   ? TextField(
+                readOnly: widget.readOnly,
+                onTap: widget.onTap,
                 controller: _subtitleController,
                 keyboardType: widget.keyboardType ?? TextInputType.text,
                 textAlignVertical: TextAlignVertical.center,

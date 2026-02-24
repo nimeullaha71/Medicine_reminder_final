@@ -187,7 +187,12 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
             InkWell(
               onTap: () async {
                 final ImagePicker picker = ImagePicker();
-                final XFile? image = await picker.pickImage(source: ImageSource.camera);
+                final XFile? image = await picker.pickImage(
+                  source: ImageSource.camera,
+                  imageQuality: 70,
+                  maxWidth: 1500,
+                  maxHeight: 1500,
+                );
                 if (image != null && widget.onImageCaptured != null) {
                   widget.onImageCaptured!(File(image.path));
                 }

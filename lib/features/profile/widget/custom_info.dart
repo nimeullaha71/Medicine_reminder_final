@@ -29,8 +29,6 @@ class CustomInfo extends StatefulWidget {
 class _CustomInfoState extends State<CustomInfo> {
   late TextEditingController _ageController;
   late TextEditingController _genderController;
-  bool _isEditingAge = false;
-  bool _isEditingGender = false;
 
   @override
   void initState() {
@@ -49,10 +47,10 @@ class _CustomInfoState extends State<CustomInfo> {
   @override
   void didUpdateWidget(CustomInfo oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.age != oldWidget.age && !_isEditingAge) {
+    if (widget.age != oldWidget.age) {
       _ageController.text = widget.age;
     }
-    if (widget.gender != oldWidget.gender && !_isEditingGender) {
+    if (widget.gender != oldWidget.gender) {
       _genderController.text = widget.gender;
     }
   }
@@ -112,9 +110,10 @@ class _CustomInfoState extends State<CustomInfo> {
                   bottomRight: Radius.circular(6),
                 ),
               ),
-              child: _isEditingAge
+              child: widget.isEditable
                   ? TextField(
                 controller: _ageController,
+                keyboardType: TextInputType.number,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -126,36 +125,19 @@ class _CustomInfoState extends State<CustomInfo> {
                   hintText: widget.age,
                   hintStyle: const TextStyle(color: Colors.grey),
                 ),
-                autofocus: true,
                 onChanged: (value) {
                   if (widget.onChanged != null) {
                     widget.onChanged!(value.isEmpty ? widget.age : value, _genderController.text.isEmpty ? widget.gender : _genderController.text);
                   }
                 },
-                onSubmitted: (value) {
-                  setState(() {
-                    _isEditingAge = false;
-                    if (value.isEmpty) {
-                      _ageController.text = widget.age;
-                    }
-                  });
-                },
               )
-                  : GestureDetector(
-                onTap: widget.isEditable ? () {
-                  setState(() {
-                    _ageController.clear();
-                    _isEditingAge = true;
-                  });
-                } : null,
-                child: Text(
+                  : Text(
                   _ageController.text.isEmpty ? widget.age : _ageController.text,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
             ),
           ),
           const SizedBox(width: 5),
@@ -187,7 +169,7 @@ class _CustomInfoState extends State<CustomInfo> {
                   bottomRight: Radius.circular(6),
                 ),
               ),
-              child: _isEditingGender
+              child: widget.isEditable
                   ? TextField(
                 controller: _genderController,
                 style: const TextStyle(
@@ -201,36 +183,19 @@ class _CustomInfoState extends State<CustomInfo> {
                   hintText: widget.gender,
                   hintStyle: const TextStyle(color: Colors.grey),
                 ),
-                autofocus: true,
                 onChanged: (value) {
                   if (widget.onChanged != null) {
                     widget.onChanged!(_ageController.text.isEmpty ? widget.age : _ageController.text, value.isEmpty ? widget.gender : value);
                   }
                 },
-                onSubmitted: (value) {
-                  setState(() {
-                    _isEditingGender = false;
-                    if (value.isEmpty) {
-                      _genderController.text = widget.gender;
-                    }
-                  });
-                },
               )
-                  : GestureDetector(
-                onTap: widget.isEditable ? () {
-                  setState(() {
-                    _genderController.clear();
-                    _isEditingGender = true;
-                  });
-                } : null,
-                child: Text(
+                  : Text(
                   _genderController.text.isEmpty ? widget.gender : _genderController.text,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
             ),
           ),
         ],
