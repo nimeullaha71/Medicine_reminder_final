@@ -55,6 +55,65 @@ class _MedicineScreenContentState extends State<MedicineScreenContent> {
     setState(() {});
   }
 
+  Future<void> _showMarkTakenDialog(MedicineModel medicine) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Medicine Taken?'),
+        content: Text('Did you take ${medicine.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xffE0712D)),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        final remainingStock = await MedicineService.markMedicineTaken(medicine.id);
+        if (remainingStock != null && mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('${medicine.name} marked as taken! Remaining stock: $remainingStock')),
+           );
+           // Update stock locally without full reload to maintain search state
+           setState(() {
+             final index = medicines.indexWhere((m) => m.id == medicine.id);
+             if (index != -1) {
+               medicines[index] = medicine.copyWith(stock: remainingStock);
+             }
+             // reapplying search logic to update filtered list
+             searchMedicine(searchText);
+           });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'.replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,18 +174,21 @@ class _MedicineScreenContentState extends State<MedicineScreenContent> {
                 children: filteredMedicines.map((medicine) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 13),
-                    child: CustomRefill(
-                      medicineName: medicine.name,
-                      remainingCount: medicine.stock,
-                      onRefill: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AddScreen(medicine: medicine),
-                          ),
-                        );
-                      },
+                    child: GestureDetector(
+                      onTap: () => _showMarkTakenDialog(medicine),
+                      child: CustomRefill(
+                        medicineName: medicine.name,
+                        remainingCount: medicine.stock,
+                        onRefill: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  AddScreen(medicine: medicine),
+                            ),
+                          ).then((_) => loadMedicines()); // Refresh after additive edits too
+                        },
+                      ),
                     ),
                   );
                 }).toList(),

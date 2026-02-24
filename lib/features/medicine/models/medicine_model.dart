@@ -53,6 +53,24 @@ class MedicineModel {
     );
   }
 
+  MedicineModel copyWith({
+    int? id,
+    String? name,
+    int? howManyDay,
+    int? stock,
+    int? prescriptionId,
+    int? quantity,
+  }) {
+    return MedicineModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      howManyDay: howManyDay ?? this.howManyDay,
+      stock: stock ?? this.stock,
+      prescriptionId: prescriptionId ?? this.prescriptionId,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
   @override
   String toString() {
     return 'MedicineModel(id: $id, name: $name, howManyDay: $howManyDay, stock: $stock, prescriptionId: $prescriptionId, quantity: $quantity)';

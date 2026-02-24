@@ -120,6 +120,35 @@ class MedicineService {
     }
   }
 
+  static Future<int?> markMedicineTaken(int id) async {
+    try {
+      final url = Urls.markMedicineTaken(id);
+      print('🚀 Marking medicine $id as taken at: $url');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _getAuthHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      print('📊 Mark Taken API Response status: ${response.statusCode}');
+      print('📊 Mark Taken API Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        return data['remaining_stock'] as int?;
+      } else {
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('❌ Error marking medicine as taken: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> createPrescription(Map<String, dynamic> prescriptionData) async {
     try {
       final url = Urls.Get_all_prescriptions;

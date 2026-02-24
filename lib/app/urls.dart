@@ -67,6 +67,11 @@ class Urls {
     return "$baseUrl/treatments/medicine/stock/$id/";
   }
 
+  // Mark Medicine as Taken
+  static String markMedicineTaken(int id) {
+    return "$baseUrl/treatments/medicine/mark-taken/$id/";
+  }
+
  // Medicine List
   static const String Medicine_list = "$baseUrl/treatments/pharmacy/";
 
