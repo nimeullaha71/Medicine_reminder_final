@@ -8,6 +8,7 @@ class CustomInfo extends StatefulWidget {
   final Function(String, String)? onChanged;
   final String? ageError;
   final String? genderError;
+  final bool isEditable;
 
   const CustomInfo({
     super.key,
@@ -18,6 +19,7 @@ class CustomInfo extends StatefulWidget {
     this.onChanged,
     this.ageError,
     this.genderError,
+    this.isEditable = true,
   });
 
   @override
@@ -140,12 +142,12 @@ class _CustomInfoState extends State<CustomInfo> {
                 },
               )
                   : GestureDetector(
-                onTap: () {
+                onTap: widget.isEditable ? () {
                   setState(() {
                     _ageController.clear();
                     _isEditingAge = true;
                   });
-                },
+                } : null,
                 child: Text(
                   _ageController.text.isEmpty ? widget.age : _ageController.text,
                   style: const TextStyle(
@@ -215,12 +217,12 @@ class _CustomInfoState extends State<CustomInfo> {
                 },
               )
                   : GestureDetector(
-                onTap: () {
+                onTap: widget.isEditable ? () {
                   setState(() {
                     _genderController.clear();
                     _isEditingGender = true;
                   });
-                },
+                } : null,
                 child: Text(
                   _genderController.text.isEmpty ? widget.gender : _genderController.text,
                   style: const TextStyle(

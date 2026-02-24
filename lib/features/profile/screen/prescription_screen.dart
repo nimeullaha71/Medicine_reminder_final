@@ -216,18 +216,19 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    CustomDetails(name: "Patient's name", medicine: prescription!.patient.displayName),
+                    CustomDetails(name: "Patient's name", medicine: prescription!.patient.displayName, isEditable: false),
                     const SizedBox(height: 10),
-                    CustomDetails(name: "Doctor's name", medicine: 'Dr. ${getDoctorName(prescription!.doctor)}'),
+                    CustomDetails(name: "Doctor's name", medicine: 'Dr. ${getDoctorName(prescription!.doctor)}', isEditable: false),
                     const SizedBox(height: 10),
                     CustomInfo(
                       name: "Patient's age", 
                       age: prescription!.patient.displayAge, 
                       sex: 'Sex', 
                       gender: prescription!.patient.displaySex,
+                      isEditable: false,
                     ),
                     const SizedBox(height: 10),
-                    CustomDetails(name: 'Health Issue', medicine: prescription!.patient.displayHealthIssues),
+                    CustomDetails(name: 'Health Issue', medicine: prescription!.patient.displayHealthIssues, isEditable: false),
                     const SizedBox(height: 10),
                   ],
                 ),
@@ -309,6 +310,7 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                               child: CustomDetails(
                                 name: 'Test $index',
                                 medicine: test.displayName,
+                                isEditable: false,
                               ),
                             );
                           }),
@@ -340,22 +342,22 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
   Widget _buildMedicineDetails(PrescriptionMedicineModel medicine) {
     return Column(
       children: [
-        CustomDetails(name: 'Medicine Name', medicine: medicine.name),
+        CustomDetails(name: 'Medicine Name', medicine: medicine.name, isEditable: false),
         const SizedBox(height: 10),
         if (medicine.hasMorning) ...[
-          CustomDetails1(name: "Morning", subtitle: medicine.morningTime),
+          CustomDetails1(name: "Morning", subtitle: medicine.morningTime, isEditable: false),
           const SizedBox(height: 10),
         ],
         if (medicine.hasAfternoon) ...[
-          CustomDetails1(name: "Afternoon", subtitle: medicine.afternoonTime),
+          CustomDetails1(name: "Afternoon", subtitle: medicine.afternoonTime, isEditable: false),
           const SizedBox(height: 10),
         ],
         if (medicine.hasEvening) ...[
-          CustomDetails1(name: "Evening", subtitle: medicine.eveningTime),
+          CustomDetails1(name: "Evening", subtitle: medicine.eveningTime, isEditable: false),
           const SizedBox(height: 10),
         ],
         if (medicine.hasNight) ...[
-          CustomDetails1(name: "Night", subtitle: medicine.nightTime),
+          CustomDetails1(name: "Night", subtitle: medicine.nightTime, isEditable: false),
           const SizedBox(height: 10),
         ],
         const SizedBox(height: 20),

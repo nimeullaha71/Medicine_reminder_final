@@ -5,6 +5,7 @@ class CustomDetails extends StatefulWidget {
   final String medicine;
   final Function(String)? onChanged;
   final String? errorMessage;
+  final bool isEditable;
 
   const CustomDetails({
     super.key,
@@ -12,6 +13,7 @@ class CustomDetails extends StatefulWidget {
     required this.medicine,
     this.onChanged,
     this.errorMessage,
+    this.isEditable = true,
   });
 
   @override
@@ -100,7 +102,7 @@ class _CustomDetailsState extends State<CustomDetails> {
                   bottomRight: Radius.circular(6),
                 ),
               ),
-              child: _isEditing
+              child: widget.isEditable
                   ? TextField(
                 controller: _medicineController,
                 style: const TextStyle(
@@ -130,12 +132,12 @@ class _CustomDetailsState extends State<CustomDetails> {
                 },
               )
                   : GestureDetector(
-                onTap: () {
+                onTap: widget.isEditable ? () {
                   setState(() {
                     _medicineController.clear();
                     _isEditing = true;
                   });
-                },
+                } : null,
                 child: Text(
                   _medicineController.text.isEmpty ? widget.medicine : _medicineController.text,
                   style: const TextStyle(

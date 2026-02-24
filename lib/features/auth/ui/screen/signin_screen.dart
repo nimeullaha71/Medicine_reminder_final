@@ -185,13 +185,8 @@ class _SigninScreenState extends State<SigninScreen> {
                 onTap: _signinUser,
                 isLoading: isLoading,
               ),
-              SizedBox(height: screenHeight * 0.02),
-              const CustomGoogle(
-                  text: "Sign in with Google", svgPath: "assets/google.svg"),
-              SizedBox(height: screenHeight * 0.011),
-              const CustomGoogle(
-                  text: "Sign in with Apple", svgPath: "assets/apple.svg"),
-              SizedBox(height: screenHeight * 0.020),
+              SizedBox(height: screenHeight * 0.05),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

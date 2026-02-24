@@ -6,6 +6,7 @@ class CustomDetails1 extends StatefulWidget {
   final Function(String)? onChanged;
   final TextInputType? keyboardType;
   final String? errorMessage;
+  final bool isEditable;
 
   const CustomDetails1({
     super.key,
@@ -14,6 +15,7 @@ class CustomDetails1 extends StatefulWidget {
     this.onChanged,
     this.keyboardType,
     this.errorMessage,
+    this.isEditable = true,
   });
 
   @override
@@ -102,7 +104,7 @@ class _CustomDetails1State extends State<CustomDetails1> {
                   bottomRight: Radius.circular(6),
                 ),
               ),
-              child: _isEditing
+              child: widget.isEditable
                   ? TextField(
                 controller: _subtitleController,
                 keyboardType: widget.keyboardType ?? TextInputType.text,
@@ -134,12 +136,12 @@ class _CustomDetails1State extends State<CustomDetails1> {
                 },
               )
                   : GestureDetector(
-                onTap: () {
+                onTap: widget.isEditable ? () {
                   setState(() {
                     _subtitleController.clear();
                     _isEditing = true;
                   });
-                },
+                } : null,
                 child: Text(
                   _subtitleController.text.isEmpty ? widget.subtitle : _subtitleController.text,
                   style: const TextStyle(
@@ -150,7 +152,6 @@ class _CustomDetails1State extends State<CustomDetails1> {
               ),
             ),
           ),
-
         ],
       ),
     );
