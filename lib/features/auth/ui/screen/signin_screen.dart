@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../../../../common/custom_button.dart';
 import '../../../home/ui/screen/home_screen.dart';
@@ -67,6 +68,7 @@ class _SigninScreenState extends State<SigninScreen> {
           // Initialize AuthService session (handles storage internally now)
           final int userId = responseData['id'] ?? 0;
           AuthService.initializeUserSession(userId, accessToken);
+          await AuthService.updateFCMToken();
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,6 +117,8 @@ class _SigninScreenState extends State<SigninScreen> {
       });
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

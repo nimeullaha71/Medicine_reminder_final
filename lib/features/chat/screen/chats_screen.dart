@@ -43,8 +43,10 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
         setState(() {
           _playerState = state;
           if (state == PlayerState.completed || state == PlayerState.stopped) {
-            _currentlyPlayingPath = null;
-            print('   - Playback stopped/completed, clearing path.');
+            // We don't clear _currentlyPlayingPath here so that if the user taps play again on the same audio, 
+            // the logic knows it's the same track and can just play it from the start.
+            // _currentlyPlayingPath = null; 
+            print('   - Playback stopped/completed.');
           }
         });
       }
@@ -267,10 +269,6 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
             'createdAt': response.createdAt,
           });
         });
-
-        if (response.voiceUrl != null && response.voiceUrl!.isNotEmpty) {
-          _playVoiceMessage(null, voiceUrl: response.voiceUrl);
-        }
       } else {
         setState(() {
           _messages.add({
@@ -359,23 +357,22 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
       final bool isUrl = targetPath.startsWith('http');
 
       if (_currentlyPlayingPath == targetPath) {
-        // Toggle: If playing, stop it. If stopped/paused, play it.
+        // Toggle play/pause
         if (_playerState == PlayerState.playing) {
-          await VoiceRecordingService.stopAudio();
-          setState(() {
-            _playerState = PlayerState.stopped;
-            _currentlyPlayingPath = null;
-          });
+          await VoiceRecordingService.pauseAudio();
+        } else if (_playerState == PlayerState.paused) {
+          await VoiceRecordingService.resumeAudio();
         } else {
+          // It was stopped or completed, start from the beginning
           await VoiceRecordingService.playAudio(targetPath, isUrl: isUrl);
         }
       } else {
-        // Switch: Stop current and play new
+        // Switch to a new audio track
         await VoiceRecordingService.stopAudio();
-        await VoiceRecordingService.playAudio(targetPath, isUrl: isUrl);
         setState(() {
           _currentlyPlayingPath = targetPath;
         });
+        await VoiceRecordingService.playAudio(targetPath, isUrl: isUrl);
       }
     } catch (e) {
       print(' Error playing voice message: $e');
@@ -555,7 +552,7 @@ class _ChatsScreenContentState extends State<ChatsScreenContent> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    isPlaying ? Icons.stop : Icons.play_arrow,
+                                    isPlaying ? Icons.pause : Icons.play_arrow,
                                     color: isUser ? Colors.white : const Color(0xFFE0712D),
                                     size: 20,
                                   ),

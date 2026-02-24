@@ -2,18 +2,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <!-- Internet (optional but common) -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Microphone (Voice recording) -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-
-    <!-- Camera -->
     <uses-permission android:name="android.permission.CAMERA"/>
-
-    <!-- Storage / Gallery (Android 12 and below) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!-- Android 13+ (API 33+) Notification permission -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <!-- Android 13+ (API 33+) Gallery access -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
@@ -28,6 +22,12 @@
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
+        
+        <!-- Default Notification Channel -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -48,6 +48,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            
+            <!-- Add this for handling notification clicks when app is in background -->
+            <intent-filter>
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

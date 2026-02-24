@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../app/urls.dart';
@@ -37,9 +37,40 @@ class AuthService {
       currentToken = savedToken;
       isLoggedIn = true;
       print('♻️ Persistent session restored: ID=$savedUserId');
+      
+      // 🔥 Automatically update token with the backend
+      updateFCMToken();
+      
       return true;
     }
     return false;
+  }
+
+  /// Send FCM Token to Backend
+  static Future<void> updateFCMToken() async {
+    try {
+      if (!isLoggedIn || currentToken.isEmpty) return;
+
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print("📱 FCM TOKEN (AuthService): $fcmToken");
+
+      if (fcmToken == null) return;
+
+      final response = await http.post(
+        Uri.parse(Urls.fcm_token_url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $currentToken',
+        },
+        body: jsonEncode({
+          "fcm_token": fcmToken,
+        }),
+      );
+
+      print("📡 AuthService FCM POST Status: ${response.statusCode}");
+    } catch (e) {
+      print("❌ AuthService FCM Update Error: $e");
+    }
   }
 
   /// Clear user session (call after logout)

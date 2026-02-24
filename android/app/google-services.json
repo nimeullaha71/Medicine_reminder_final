@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "504558016903",
+    "project_id": "meda-d8bdd",
+    "storage_bucket": "meda-d8bdd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:504558016903:android:0913f2bc8d1e195497db22",
+        "android_client_info": {
+          "package_name": "com.example.care_agent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzj_69si4HYezlXXluC1MpTcQZMFYKtJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

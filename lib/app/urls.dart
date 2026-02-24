@@ -93,4 +93,6 @@ class Urls {
   static const String Notifications = "$baseUrl/treatments/notifications";
   static String markNotificationRead(int id) => "$baseUrl/treatments/notifications/$id/";
   static String deleteNotification(int id) => "$baseUrl/treatments/notifications/$id/";
+  static String fcm_token_url ="$baseUrl/users/fcm/token/";
+
 }

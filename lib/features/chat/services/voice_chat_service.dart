@@ -55,11 +55,9 @@ class VoiceChatService {
       request.fields['reply_mode'] = 'voice';
 
 
-      final audioFileBytes = await audioFile.readAsBytes();
-      final multipartFile = http.MultipartFile.fromBytes(
+      final multipartFile = await http.MultipartFile.fromPath(
         'audio',
-        audioFileBytes,
-        filename: path.basename(audioPath),
+        audioPath,
       );
       request.files.add(multipartFile);
 

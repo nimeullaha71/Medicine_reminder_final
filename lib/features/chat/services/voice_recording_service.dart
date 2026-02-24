@@ -49,16 +49,15 @@ class VoiceRecordingService {
 
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'voice_recording_$timestamp.m4a';
+      final fileName = 'voice_recording_$timestamp.wav';
       _currentRecordingPath = path.join(tempDir.path, fileName);
 
       print(' Starting recording to: $_currentRecordingPath');
 
       await _audioRecorder.start(
         const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
+          encoder: AudioEncoder.wav,
+          // Let the device use its default supported sampleRate/bitRate for WAV
         ),
         path: _currentRecordingPath!,
       );
