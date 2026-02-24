@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/app_shell.dart';
+
 class TermsConditionsScreen extends StatelessWidget {
   const TermsConditionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return  SubPageScaffold(
+      backgroundColor: const Color(0xFFFFFAF7),
+      parentTabIndex: 4,
       appBar: AppBar(
-        title: const Text("Terms & Conditions"),
-        backgroundColor: const Color(0xffE0712D),
+        title: const Text(
+          "Terms & Conditions",
+          style: TextStyle(
+            color: Color(0xffE0712D),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xffE0712D), size: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -121,7 +137,7 @@ class TermsConditionsScreen extends StatelessWidget {
             Text(
               "If you have questions about these Terms & Conditions, please contact us at:\n\n"
                   "Email: support@medai.com\n"
-                  "Address: [Your Company Address]",
+                  "Address: Bangladesh",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),

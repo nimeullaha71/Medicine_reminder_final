@@ -2,6 +2,8 @@ import 'package:care_agent/common/custom_button.dart';
 import 'package:care_agent/features/profile/screen/edit_screen.dart';
 import 'package:care_agent/features/profile/screen/myprofile_screen.dart';
 import 'package:care_agent/features/profile/screen/prescp_screen.dart';
+import 'package:care_agent/features/profile/screen/privacy_policy.dart';
+import 'package:care_agent/features/profile/screen/terms_conditions_screen.dart';
 import 'package:care_agent/features/profile/widget/custom_new.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -434,10 +436,26 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               ),
               SizedBox(height: 10),
 
-              CustomNew(text: "Privacy Policy"),
+              CustomNew(text: "Privacy Policy",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicy(),
+                    ),
+                  );
+                },),
               SizedBox(height: 10),
 
-              CustomNew(text: "Terms and Conditions"),
+              CustomNew(text: "Terms and Conditions",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TermsConditionsScreen(),
+                    ),
+                  );
+                },),
               SizedBox(height: 10),
 
               CustomNew(text: "Delete Account",onTap: (){

@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
+import '../../../common/app_shell.dart';
 
 class PrivacyPolicy extends StatelessWidget {
   const PrivacyPolicy({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return  SubPageScaffold(
+      backgroundColor: const Color(0xFFFFFAF7),
+      parentTabIndex: 4,
       appBar: AppBar(
-        title: const Text("Privacy Policy"),
-        backgroundColor: const Color(0xffE0712D),
+        title: const Text(
+          "Privacy Policy",
+          style: TextStyle(
+            color: Color(0xffE0712D),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xffE0712D), size: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -30,7 +45,7 @@ class PrivacyPolicy extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              "MED AI (“we”, “our”, or “us”) values your privacy. This Privacy Policy explains how we collect, use, and protect your personal information when you use our mobile application.",
+              "MED AI our values your privacy. This Privacy Policy explains how we collect, use, and protect your personal information when you use our mobile application.",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
@@ -122,7 +137,7 @@ class PrivacyPolicy extends StatelessWidget {
             Text(
               "If you have questions about this Privacy Policy, you can contact us at:\n\n"
                   "Email: support@medai.com\n"
-                  "Address: [Your Company Address]",
+                  "Address: Bangladesh",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
