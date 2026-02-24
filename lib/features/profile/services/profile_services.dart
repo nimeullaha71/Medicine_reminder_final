@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/painting.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 import '../../../app/urls.dart';
 import '../models/profile_model.dart';
 import '../models/delete_account_request_model.dart';
 import '../models/change_password_model.dart';
+import '../../auth/services/auth_service.dart';
 
 class ProfileService {
   static final box = GetStorage();
+  static final _uuid = Uuid();
 
   static Map<String, String> _getAuthHeaders() {
     final token = box.read('access_token');
@@ -204,6 +209,60 @@ class ProfileService {
     return box.read('profile_image_path');
   }
 
+  static Future<void> saveLocalImagePath(String? imagePath) async {
+    if (imagePath != null && imagePath.isNotEmpty) {
+      await box.write('profile_image_path', imagePath);
+      // Store current user ID with image for validation
+      final currentUserId = box.read('user_id'); // Use correct key from AuthService
+      if (currentUserId != null) {
+        await box.write('profile_image_user_id', currentUserId);
+      }
+    } else {
+      await box.remove('profile_image_path');
+      await box.remove('profile_image_user_id');
+    }
+  }
+
+  static Future<bool> isLocalImageForCurrentUser() async {
+    final currentUserId = box.read('user_id'); // Use correct key from AuthService
+    final imageUserId = box.read('profile_image_user_id');
+    return currentUserId != null && currentUserId == imageUserId;
+  }
+
+  static Future<void> deleteLocalImageFile() async {
+    try {
+      final imagePath = await getLocalImagePath();
+      if (imagePath != null && imagePath.isNotEmpty) {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          await file.delete();
+          print('Local profile image deleted: $imagePath');
+        }
+      }
+    } catch (e) {
+      print('Error deleting local image file: $e');
+    }
+  }
+
+  static Future<void> clearProfileImageCache() async {
+    try {
+      // Clear image cache for network images
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      
+      // Generate new cache key for next load
+      final cacheKey = _uuid.v4();
+      await box.write('profile_image_cache_key', cacheKey);
+      print('Profile image cache cleared, new key: $cacheKey');
+    } catch (e) {
+      print('Error clearing image cache: $e');
+    }
+  }
+
+  static String? getProfileImageCacheKey() {
+    return box.read('profile_image_cache_key');
+  }
+
   static Future<void> signOut() async {
     try {
       // Call logout API first
@@ -228,15 +287,28 @@ class ProfileService {
         print('Logout API Response body: ${response.body}');
       }
 
-      // Clear stored tokens
+      // Clean up profile image and cache
+      await deleteLocalImageFile();
+      await clearProfileImageCache();
+      await saveLocalImagePath(null);
+
+      // Clear stored tokens and user data
       await box.remove('access_token');
       await box.remove('refresh_token');
-      print('User signed out successfully');
+      await box.remove('user_id'); 
+      await box.remove('profile_image_user_id');
+      
+      print('User signed out successfully, profile image cleaned up');
     } catch (e) {
       print('Error during logout: $e');
-      // Still clear tokens even if API call fails
+      // Still clear everything even if API call fails
+      await deleteLocalImageFile();
+      await clearProfileImageCache();
+      await saveLocalImagePath(null);
       await box.remove('access_token');
       await box.remove('refresh_token');
+      await box.remove('user_id'); // Use correct key from AuthService
+      await box.remove('profile_image_user_id');
       throw Exception('Error signing out: $e');
     }
   }

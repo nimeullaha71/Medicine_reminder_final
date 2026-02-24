@@ -45,16 +45,35 @@ class _MyprofileScreenState extends State<MyprofileScreen> {
     _loadProfile();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh profile when returning to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadProfile();
+      }
+    });
+  }
+
   Future<void> _loadProfile() async {
     try {
       final profile = await ProfileService.getProfile();
 
-      // Check for locally stored image path since API doesn't support profile pictures
+      // Only use local image if it belongs to current user
       final localImagePath = await ProfileService.getLocalImagePath();
+      final isLocalImageValid = await ProfileService.isLocalImageForCurrentUser();
 
       ProfileModel updatedProfile = profile;
-      if (localImagePath != null) {
+      if (localImagePath != null && isLocalImageValid) {
         updatedProfile = profile.copyWith(profilePicture: localImagePath);
+        print('Using local profile image for current user: $localImagePath');
+      } else {
+        print('Local image not valid for current user, using API image');
+        // Clear invalid local image
+        if (localImagePath != null) {
+          await ProfileService.saveLocalImagePath(null);
+        }
       }
 
       setState(() {
@@ -228,13 +247,16 @@ class _MyprofileScreenState extends State<MyprofileScreen> {
                                       .startsWith('/data/') ||
                                       _profile!.profilePicture!
                                           .startsWith('file://')) {
+                                    // Local file - use file path with cache-busting
                                     return Image.file(
                                       File(_profile!.profilePicture!),
                                       width: 150,
                                       height: 150,
                                       fit: BoxFit.cover,
+                                      key: ValueKey('local_${_profile!.profilePicture}_${DateTime.now().millisecondsSinceEpoch}'),
                                       errorBuilder:
                                           (context, error, stackTrace) {
+                                        print('Error loading local image: $error');
                                         return Icon(
                                           Icons.person,
                                           size: 150,
@@ -243,13 +265,27 @@ class _MyprofileScreenState extends State<MyprofileScreen> {
                                       },
                                     );
                                   } else {
+                                    // Network image - use URL with cache-busting
+                                    final cacheKey = ProfileService.getProfileImageCacheKey() ?? '';
+                                    final imageUrl = _profile!.profilePicture!;
+                                    final bustUrl = cacheKey.isNotEmpty 
+                                        ? '$imageUrl?cache=$cacheKey'
+                                        : imageUrl;
+                                    
                                     return Image.network(
-                                      _profile!.profilePicture!,
+                                      bustUrl,
                                       width: 150,
                                       height: 150,
                                       fit: BoxFit.cover,
+                                      key: ValueKey('network_$bustUrl'),
+                                      headers: const {
+                                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                                        'Pragma': 'no-cache',
+                                        'Expires': '0',
+                                      },
                                       errorBuilder:
                                           (context, error, stackTrace) {
+                                        print('Error loading network image: $error');
                                         return Icon(
                                           Icons.person,
                                           size: 150,
