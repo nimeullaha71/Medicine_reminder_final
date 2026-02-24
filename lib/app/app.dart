@@ -9,7 +9,7 @@ class CareAgent extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
 
-      title: "Top Talent Agency",
+      title: "Med AI",
       debugShowCheckedModeBanner: false,
       home: SplashScreen(),
     );

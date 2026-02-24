@@ -53,13 +53,10 @@ class _ActionInputBarWidgetState extends State<ActionInputBarWidget> with Single
 
   Future<void> _initializeVoiceService() async {
     try {
-      final initialized = await VoiceRecordingService.initialize();
-      if (!initialized) {
-        _showSnackBar('Voice recording initialization failed');
-      }
+      await VoiceRecordingService.initialize();
+      // Do nothing if initialization fails
     } catch (e) {
-      print('❌ Error initializing voice service: $e');
-      _showSnackBar('Failed to initialize voice recording');
+      // Silently ignore errors
     }
   }
 

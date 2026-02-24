@@ -2,6 +2,25 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+	    <!-- Microphone / Voice -->
+        <key>NSMicrophoneUsageDescription</key>
+        <string>This app needs access to your microphone to record audio.</string>
+
+        <!-- Camera -->
+        <key>NSCameraUsageDescription</key>
+        <string>This app needs access to your camera to take photos and videos.</string>
+
+        <!-- Photo Library / Gallery -->
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>This app needs access to your photo library to select and save images.</string>
+
+        <!-- Calendar -->
+        <key>NSCalendarsUsageDescription</key>
+        <string>This app needs access to your calendar to read and write events.</string>
+
+        <!-- Optional: Photo Library Add Only (iOS 14+) -->
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>This app needs permission to save photos to your library.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
