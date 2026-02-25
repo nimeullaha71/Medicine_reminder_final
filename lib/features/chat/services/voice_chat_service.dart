@@ -4,6 +4,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import '../../../app/urls.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/chat_model.dart';
 
 final chatBox = GetStorage();
@@ -92,6 +93,7 @@ class VoiceChatService {
           throw Exception('Failed to parse voice response: $parseError');
         }
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         print(' Authentication failed');
         throw Exception('Authentication failed');
       } else {

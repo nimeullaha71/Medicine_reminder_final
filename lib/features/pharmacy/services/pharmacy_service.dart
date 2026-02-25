@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
 import '../../../app/urls.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/pharmacy_model.dart';
 
 class PharmacyService {
@@ -63,6 +64,7 @@ class PharmacyService {
       } else if (response.statusCode == 400) {
         throw Exception('Invalid data provided');
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else {
         throw Exception('Failed to add pharmacy: ${response.statusCode}');

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import '../../../app/urls.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/prescription_model.dart';
 
 class PrescriptionService {
@@ -58,6 +59,7 @@ class PrescriptionService {
           throw Exception('Failed to parse prescriptions response: $parseError');
         }
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else if (response.statusCode == 404) {
         return []; // No prescriptions found
@@ -110,6 +112,7 @@ class PrescriptionService {
           throw Exception('Failed to parse prescription response: $parseError');
         }
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else if (response.statusCode == 404) {
         throw Exception('Prescription not found');
@@ -150,6 +153,7 @@ class PrescriptionService {
         print(' Prescription deleted successfully');
         return true;
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else if (response.statusCode == 404) {
         throw Exception('Prescription not found');

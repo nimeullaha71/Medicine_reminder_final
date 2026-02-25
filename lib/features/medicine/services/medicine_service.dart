@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import '../../../app/urls.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/medicine_model.dart';
 
 class MedicineService {
@@ -59,6 +60,7 @@ class MedicineService {
           throw Exception('Failed to parse medicines response: $parseError');
         }
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else if (response.statusCode == 404) {
         print('📝 No medicines found (404)');

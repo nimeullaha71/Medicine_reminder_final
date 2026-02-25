@@ -388,6 +388,7 @@ class ProfileService {
         print(' Account deleted successfully');
         return true;
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         print(' Authentication failed - token expired or invalid');
         throw Exception('Session expired: Please log in again');
       } else if (response.statusCode == 403) {

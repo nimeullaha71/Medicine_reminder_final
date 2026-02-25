@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import '../../../app/urls.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/pharmacy_model.dart';
 
 /// Service class for fetching pharmacy data from API
@@ -61,6 +62,7 @@ class PharmacyService {
           throw Exception('Failed to parse pharmacies response: $parseError');
         }
       } else if (response.statusCode == 401) {
+        AuthService.handleUnauthorized();
         throw Exception('Unauthorized - Please login again');
       } else if (response.statusCode == 404) {
         print('No pharmacies found (404)');

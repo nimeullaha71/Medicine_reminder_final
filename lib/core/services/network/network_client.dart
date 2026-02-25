@@ -9,6 +9,7 @@ import 'package:mime/mime.dart';
 
 import 'network_response.dart';
 import '../storage/token_storage_service.dart';
+import '../../../features/auth/services/auth_service.dart';
 
 class NetworkClient {
   final Logger _logger = Logger();
@@ -230,6 +231,7 @@ class NetworkClient {
     else if (response.statusCode == 401) {
       print(' Unauthorized - clearing tokens and triggering logout');
       TokenStorageService.clearTokens();
+      AuthService.handleUnauthorized();
       onUnAuthorize();
       return NetworkResponse(
         isSuccess: false,

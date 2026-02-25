@@ -4,6 +4,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../app/urls.dart';
 import '../data/signup_model.dart';
+import '../../auth/ui/screen/signin_screen.dart';
+import '../../../app/app.dart';
+import 'package:flutter/material.dart';
 
 class AuthService {
   // Static properties for current user session
@@ -85,6 +88,22 @@ class AuthService {
     box.remove('access_token');
     
     print('🔒 User session cleared and persistence removed');
+  }
+
+  /// Handle 401 Unauthorized Globally
+  static void handleUnauthorized() {
+    print('🚨 Unauthorized access detected. Forcing logout...');
+    clearUserSession();
+
+    if (navigatorKey.currentContext != null) {
+      Navigator.pushAndRemoveUntil(
+        navigatorKey.currentContext!,
+        MaterialPageRoute(builder: (context) => const SigninScreen()),
+        (route) => false,
+      );
+    } else {
+      print('⚠️ Error: Navigator context is null. Cannot redirect.');
+    }
   }
 
   /// Get current user ID
